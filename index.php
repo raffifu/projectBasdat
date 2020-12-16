@@ -39,11 +39,11 @@
         <tbody>
           <?php
           $query = "
-              SELECT nama_barang,nama_lokasi,jumlah,nama_jenis FROM tb_barang
-              INNER JOIN tb_lokasi
-              ON tb_barang.kode_lokasi = tb_lokasi.kode_lokasi
-              INNER JOIN tb_jenis
-              ON tb_barang.kode_jenis = tb_jenis.kode_jenis
+              SELECT namaBarang,namaLokasi,jumlah,namaJenis FROM barang
+              INNER JOIN lokasi
+              ON barang.kodeLokasi = lokasi.kodeLokasi
+              INNER JOIN jenis
+              ON barang.kodeJenis = jenis.kodeJenis
               ";
           $result = mysqli_query($db, $query);
           $i = 1;
@@ -51,9 +51,9 @@
             echo "
                   <tr>
                     <th scope='row'>{$i}</th>
-                    <td>{$data['nama_barang']}</td>
-                    <td>{$data['nama_lokasi']}</td>
-                    <td>{$data['nama_jenis']}</td>
+                    <td>{$data['namaBarang']}</td>
+                    <td>{$data['namaLokasi']}</td>
+                    <td>{$data['namaJenis']}</td>
                     <td>{$data['jumlah']}</td>
                   </tr>
                 ";
@@ -64,9 +64,9 @@
       </table>
       <nav>
         <ul class="pagination justify-content-center">
-          <li class="page-item"><a class="page-link bg-dark text-white" href="#">1</a></li>
-          <li class="page-item"><a class="page-link bg-dark text-white" href="#">2</a></li>
-          <li class="page-item"><a class="page-link bg-dark text-white" href="#">3</a></li>
+          <li class="page-item"><a class="page-link bg-dark text-white" href="?page=1">1</a></li>
+          <li class="page-item"><a class="page-link bg-dark text-white" href="?page=2">2</a></li>
+          <li class="page-item"><a class="page-link bg-dark text-white" href="?page=3">3</a></li>
         </ul>
       </nav>
     </div>
@@ -91,10 +91,10 @@
               <label for="lokasiBarang">Lokasi</label>
               <select class="form-control" name="lokasi" id="lokasiBarang">
                 <?php
-                $queryLokasi = "SELECT * FROM tb_lokasi";
+                $queryLokasi = "SELECT * FROM lokasi";
                 $resultLokasi = mysqli_query($db, $queryLokasi);
                 while ($data = mysqli_fetch_array($resultLokasi)) {
-                  echo "<option value=" . "{$data['kode_lokasi']}" . ">{$data['nama_lokasi']}</option>";
+                  echo "<option value=" . "{$data['kodeLokasi']}" . ">{$data['namaLokasi']}</option>";
                 }
                 ?>
               </select>
@@ -104,10 +104,10 @@
                 <label for="jenisBarang">Jenis</label>
                 <select class="form-control" name="jenis" id="jenisBarang">
                   <?php
-                  $queryJenis = "SELECT * FROM tb_jenis";
+                  $queryJenis = "SELECT * FROM jenis";
                   $resultJenis = mysqli_query($db, $queryJenis);
                   while ($data = mysqli_fetch_array($resultJenis)) {
-                    echo "<option value=" . "{$data['kode_jenis']}" . ">{$data['nama_jenis']}</option>";
+                    echo "<option value=" . "{$data['kodeJenis']}" . ">{$data['namaJenis']}</option>";
                   }
                   ?>
                 </select>
@@ -146,9 +146,12 @@
           type: 'POST',
           url: "./tambahdata.php",
           data: form.serialize(),
-          dataType: 'JSON',
           success: (data) => {
-            console.log(data);
+            data = JSON.parse(data);
+            if (data.status) {
+              $("#tambahData").modal('hide');
+              location.reload();
+            }
           },
           error: function(jqXHR, textStatus, errorThrown) {
             console.error(errorThrown);

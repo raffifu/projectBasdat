@@ -3,7 +3,7 @@
 $server = "localhost";
 $user = "root";
 $password = "inipassword";
-$nama_database = "wd_vsga_2020";
+$nama_database = "inventaris";
 
 $db = mysqli_connect($server, $user, $password, $nama_database);
 
