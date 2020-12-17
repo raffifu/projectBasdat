@@ -163,7 +163,7 @@
                 <input type="number" name="jumlah" class="form-control">
               </div>
             </div>
-            <input type="hidden" name="submit" value="submit">
+            <input type="hidden" name="tambah" value="tambah">
           </form>
         </div>
         <div class="modal-footer">
@@ -219,12 +219,12 @@
                 <input type="number" name="jumlah" class="form-control" id="jumlahBarang">
               </div>
             </div>
-            <input type="hidden" name="submit" value="submit">
+            <input type="hidden" name="update" value="update">
           </form>
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" data-dismiss="modal">Tutup</button>
-          <button id="update" type="button" class="btn btn-primary">Simpan</button>
+          <button id="update" type="button" class="btn btn-primary">Update</button>
         </div>
       </div>
     </div>
@@ -252,21 +252,32 @@
       findOption(jenis).setAttribute('selected', 'selected');
       $('#namaBarang').val(namaBarang);
       $('#jumlahBarang').val(jumlah);
+      $('input[name="update"]').val(id);
       $('#updateData').modal('show');
-      $.ajax({
-        type: 'POST',
-        url: "./processData.php",
-        data: $('#formUpdate').serialize(),
-        success: (data) => {
-          data = JSON.parse(data);
-          if (data.status) {
-            location.reload();
+    });
+
+    $('#update').click(event => {
+      const form = $('#formUpdate');
+      const namaBarang = form.find('input[name="nama"]')[0].value;
+      const jumlahBarang = form.find('input[name="jumlah"]')[0].value;
+      console.log(form.serialize());
+      if (namaBarang != "" && jumlahBarang != "") {
+        $.ajax({
+          type: 'POST',
+          url: "./processData.php",
+          data: form.serialize(),
+          success: (data) => {
+            // console.log(data);
+            data = JSON.parse(data);
+            if (data.status) {
+              location.reload();
+            }
+          },
+          error: function(jqXHR, textStatus, errorThrown) {
+            console.error(errorThrown);
           }
-        },
-        error: function(jqXHR, textStatus, errorThrown) {
-          console.error(errorThrown);
-        }
-      });
+        });
+      }
     });
 
     const findOption = (text) => {

@@ -1,7 +1,7 @@
 <?php
 include("config.php");
 
-if(isset($_POST['submit'])){
+if(isset($_POST['tambah'])){
   $namaBarang = $_POST['nama'];
   $kodeJenis = $_POST['jenis'];
   $kodeLokasi = $_POST['lokasi'];
@@ -24,7 +24,23 @@ if(isset($_POST['submit'])){
   } else {
     echo json_encode(array('status' => False));
   }
-}else {
+}else if(isset($_POST['update'])){
+  $idBarang = $_POST['update'];
+  $namaBarang = $_POST['nama'];
+  $kodeJenis = $_POST['jenis'];
+  $kodeLokasi = $_POST['lokasi'];
+  $jumlah = $_POST['jumlah'];
+
+  $query = "UPDATE barang SET namaBarang='{$namaBarang}',kodeLokasi='{$kodeLokasi}',kodeJenis='{$kodeJenis}',jumlah='{$jumlah}'
+            WHERE kodeBarang='{$idBarang}'
+            ";
+  $runSql = mysqli_query($db, $query);
+  if ($runSql) {
+    echo json_encode(array('status' => True));
+  } else {
+    echo json_encode(array('status' => False));
+  }
+} else {
   echo "Tidak terdapat data";
 }
 ?>
