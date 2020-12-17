@@ -82,7 +82,7 @@
             $startWith++;
             while ($data = mysqli_fetch_array($result)) {
               echo "
-                  <tr>
+                  <tr id='barang-{$data['kodeBarang']}'>
                     <th scope='row'>{$startWith}</th>
                     <td>{$data['namaBarang']}</td>
                     <td>{$data['namaLokasi']}</td>
@@ -117,18 +117,74 @@
       </nav>
     </div>
   </main>
-  <!-- Pop Up -->
+  <!-- Pop Up tambah Data -->
   <div class="modal fade" id="tambahData" tabindex="-1">
     <div class="modal-dialog">
       <div class="modal-content">
         <div class="modal-header">
-          <h5 class="modal-title" id="exampleModalLabel">Tambah Data</h5>
+          <h5 class="modal-title" id="modalLabel">Tambah Data</h5>
           <button type="button" class="close" data-dismiss="modal" aria-label="Close">
             <span aria-hidden="true">&times;</span>
           </button>
         </div>
         <div class="modal-body">
           <form id='tambahBarang'>
+            <div class="form-group">
+              <label for="namaBarang">Nama Barang</label>
+              <input type="text" name="nama" class="form-control">
+            </div>
+            <div class="form-group">
+              <label for="lokasiBarang">Lokasi</label>
+              <select class="form-control" name="lokasi">
+                <?php
+                $queryLokasi = "SELECT * FROM lokasi";
+                $resultLokasi = mysqli_query($db, $queryLokasi);
+                while ($data = mysqli_fetch_array($resultLokasi)) {
+                  echo "<option value=" . "{$data['kodeLokasi']}" . ">{$data['namaLokasi']}</option>";
+                }
+                ?>
+              </select>
+            </div>
+            <div class="row">
+              <div class="col">
+                <label for="jenisBarang">Jenis</label>
+                <select class="form-control" name="jenis">
+                  <?php
+                  $queryJenis = "SELECT * FROM jenis";
+                  $resultJenis = mysqli_query($db, $queryJenis);
+                  while ($data = mysqli_fetch_array($resultJenis)) {
+                    echo "<option value=" . "{$data['kodeJenis']}" . ">{$data['namaJenis']}</option>";
+                  }
+                  ?>
+                </select>
+              </div>
+              <div class="col">
+                <label for="jumlahBarang">Jumlah Barang</label>
+                <input type="number" name="jumlah" class="form-control">
+              </div>
+            </div>
+            <input type="hidden" name="submit" value="submit">
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Tutup</button>
+          <button id="simpan" type="button" class="btn btn-primary">Simpan</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- Pop Up edit data -->
+  <div class="modal fade" id="updateData" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="modalLabel">Edit Data</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <form id='formUpdate'>
             <div class="form-group">
               <label for="namaBarang">Nama Barang</label>
               <input type="text" name="nama" class="form-control" id="namaBarang">
@@ -168,7 +224,7 @@
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" data-dismiss="modal">Tutup</button>
-          <button id="simpan" type="button" class="btn btn-primary">Simpan</button>
+          <button id="update" type="button" class="btn btn-primary">Simpan</button>
         </div>
       </div>
     </div>
@@ -184,8 +240,45 @@
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/js/bootstrap.min.js" integrity="sha384-w1Q4orYjBQndcko6MimVbzY0tgp4pWB4lZ7lr30WKz0vr/aWKhXdBNmNb5D92v7s" crossorigin="anonymous"></script>
   <script>
     $('.edit').click(function() {
+      // get value from row table
       const id = this.id.split('-')[1];
+      const value = $(`#barang-${id}`).children('td');
+      const namaBarang = value[0].innerText;
+      const lokasi = value[1].innerText;
+      const jenis = value[2].innerText;
+      const jumlah = value[3].innerText;
+      // set value to modal update barang
+      findOption(lokasi).setAttribute('selected', 'selected');
+      findOption(jenis).setAttribute('selected', 'selected');
+      $('#namaBarang').val(namaBarang);
+      $('#jumlahBarang').val(jumlah);
+      $('#updateData').modal('show');
+      $.ajax({
+        type: 'POST',
+        url: "./processData.php",
+        data: $('#formUpdate').serialize(),
+        success: (data) => {
+          data = JSON.parse(data);
+          if (data.status) {
+            location.reload();
+          }
+        },
+        error: function(jqXHR, textStatus, errorThrown) {
+          console.error(errorThrown);
+        }
+      });
     });
+
+    const findOption = (text) => {
+      let element;
+      document.querySelectorAll('option').forEach(item => {
+        // console.log(item.innerText);
+        if (item.innerText == text) {
+          element = item;
+        }
+      })
+      return element || false;
+    }
 
     $('.delete').click(function() {
       const id = this.id.split('-')[1];
