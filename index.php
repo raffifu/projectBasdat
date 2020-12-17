@@ -28,59 +28,60 @@
       <button type="button" data-toggle="modal" data-target="#tambahData" class="btn btn-dark btn-sm mb-2 mx-auto">+ Tambah</button>
     </div>
     <div class="content">
-      <table class="table table-striped table-hover">
-        <thead class="thead-dark">
-          <tr>
-            <th scope="col">No</th>
-            <th scope="col">Nama Barang</th>
-            <th scope="col">Lokasi</th>
-            <th scope="col">Jenis</th>
-            <th scope="col">Jumlah</th>
-            <th scope="col">Action</th>
-          </tr>
-        </thead>
-        <tbody>
-          <?php
-          if (isset($_GET['search']) ? ( $_GET['search'] != "" ? True : False) : False) {
-            $searchItem = $_GET['search'];
-            $query = "
-              SELECT namaBarang,namaLokasi,jumlah,namaJenis FROM barang
+      <div class="table-responsive">
+        <table class="table table-striped table-hover">
+          <thead class="thead-dark">
+            <tr>
+              <th scope="col">No</th>
+              <th scope="col">Nama Barang</th>
+              <th scope="col">Lokasi</th>
+              <th scope="col">Jenis</th>
+              <th scope="col">Jumlah</th>
+              <th scope="col">Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            <?php
+            if (isset($_GET['search']) ? ($_GET['search'] != "" ? True : False) : False) {
+              $searchItem = $_GET['search'];
+              $query = "
+              SELECT kodeBarang,namaBarang,namaLokasi,jumlah,namaJenis FROM barang
               INNER JOIN lokasi
               ON barang.kodeLokasi = lokasi.kodeLokasi
               INNER JOIN jenis
               ON barang.kodeJenis = jenis.kodeJenis
               WHERE namaBarang LIKE '%{$searchItem}%'
             ";
-            $startWith = 0;
-          } else if (isset($_GET['p'])) {
-            if (is_numeric($_GET['p']) && $_GET['p'] > 0) {
-              $startWith = ($_GET['p'] - 1) * 10;
+              $startWith = 0;
+            } else if (isset($_GET['p'])) {
+              if (is_numeric($_GET['p']) && $_GET['p'] > 0) {
+                $startWith = ($_GET['p'] - 1) * 10;
+              } else {
+                $startWith = 0;
+              }
+              $query = "
+              SELECT kodeBarang,namaBarang,namaLokasi,jumlah,namaJenis FROM barang
+              INNER JOIN lokasi
+              ON barang.kodeLokasi = lokasi.kodeLokasi
+              INNER JOIN jenis
+              ON barang.kodeJenis = jenis.kodeJenis
+              LIMIT 10 OFFSET $startWith
+              ";
             } else {
               $startWith = 0;
+              $query = "
+              SELECT kodeBarang,namaBarang,namaLokasi,jumlah,namaJenis FROM barang
+              INNER JOIN lokasi
+              ON barang.kodeLokasi = lokasi.kodeLokasi
+              INNER JOIN jenis
+              ON barang.kodeJenis = jenis.kodeJenis
+              LIMIT 10 OFFSET $startWith
+              ";
             }
-            $query = "
-              SELECT namaBarang,namaLokasi,jumlah,namaJenis FROM barang
-              INNER JOIN lokasi
-              ON barang.kodeLokasi = lokasi.kodeLokasi
-              INNER JOIN jenis
-              ON barang.kodeJenis = jenis.kodeJenis
-              LIMIT 10 OFFSET $startWith
-              ";
-          } else {
-            $startWith = 0;
-            $query = "
-              SELECT namaBarang,namaLokasi,jumlah,namaJenis FROM barang
-              INNER JOIN lokasi
-              ON barang.kodeLokasi = lokasi.kodeLokasi
-              INNER JOIN jenis
-              ON barang.kodeJenis = jenis.kodeJenis
-              LIMIT 10 OFFSET $startWith
-              ";
-          }
-          $result = mysqli_query($db, $query);
-          $startWith++;
-          while ($data = mysqli_fetch_array($result)) {
-            echo "
+            $result = mysqli_query($db, $query);
+            $startWith++;
+            while ($data = mysqli_fetch_array($result)) {
+              echo "
                   <tr>
                     <th scope='row'>{$startWith}</th>
                     <td>{$data['namaBarang']}</td>
@@ -88,17 +89,17 @@
                     <td>{$data['namaJenis']}</td>
                     <td>{$data['jumlah']}</td>
                     <td>
-                      <a href=''>Edit</a>
-                      <a href=''>Delete</a>
+                      <button type='button' id='" . "edit-{$data['kodeBarang']}" . "' class='edit btn btn-warning btn-sm'>Edit</button>
+                      <button type='button' id='" . "delete-{$data['kodeBarang']}" . "' class='delete btn btn-danger btn-sm'>Delete</button>
                     </td>
                   </tr>
                 ";
-            $startWith++;
-          }
-          ?>
-        </tbody>
-
-      </table>
+              $startWith++;
+            }
+            ?>
+          </tbody>
+        </table>
+      </div>
       <nav>
         <ul class="pagination justify-content-center">
           <?php
@@ -182,6 +183,28 @@
   <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js" integrity="sha384-9/reFTGAW83EW2RDu2S0VKaIzap3H66lZH81PoYlFhbGU+6BZp6G7niu735Sk7lN" crossorigin="anonymous"></script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/js/bootstrap.min.js" integrity="sha384-w1Q4orYjBQndcko6MimVbzY0tgp4pWB4lZ7lr30WKz0vr/aWKhXdBNmNb5D92v7s" crossorigin="anonymous"></script>
   <script>
+    $('.edit').click(function() {
+      const id = this.id.split('-')[1];
+    });
+
+    $('.delete').click(function() {
+      const id = this.id.split('-')[1];
+      $.ajax({
+        type: 'POST',
+        url: "./processData.php",
+        data: `delete=${id}`,
+        success: (data) => {
+          data = JSON.parse(data);
+          if (data.status) {
+            location.reload();
+          }
+        },
+        error: function(jqXHR, textStatus, errorThrown) {
+          console.error(errorThrown);
+        }
+      });
+    });
+
     $.urlParam = function(name) {
       var results = new RegExp('[\?&]' + name + '=([^&#]*)').exec(window.location.href);
       return results == null ? 0 : (results[1] || 0);
@@ -201,7 +224,7 @@
       if (namaBarang != "" && jumlahBarang != "") {
         $.ajax({
           type: 'POST',
-          url: "./tambahdata.php",
+          url: "./processData.php",
           data: form.serialize(),
           success: (data) => {
             data = JSON.parse(data);
