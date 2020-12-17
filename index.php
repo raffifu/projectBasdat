@@ -41,7 +41,7 @@
         </thead>
         <tbody>
           <?php
-          if (isset($_GET['search']) && $_GET['search'] != "") {
+          if (isset($_GET['search']) ? ( $_GET['search'] != "" ? True : False) : False) {
             $searchItem = $_GET['search'];
             $query = "
               SELECT namaBarang,namaLokasi,jumlah,namaJenis FROM barang
@@ -51,6 +51,7 @@
               ON barang.kodeJenis = jenis.kodeJenis
               WHERE namaBarang LIKE '%{$searchItem}%'
             ";
+            $startWith = 0;
           } else if (isset($_GET['p'])) {
             if (is_numeric($_GET['p']) && $_GET['p'] > 0) {
               $startWith = ($_GET['p'] - 1) * 10;
