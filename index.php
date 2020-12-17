@@ -16,12 +16,14 @@
 <body class="container">
   <header class="header"></header>
   <main>
-    <div class="input-group input-group-lg mb-5 mx-auto">
-      <input type="text" class="form-control" placeholder="Masukkan kata kunci">
-      <div class="input-group-append">
-        <button class="btn btn-dark" type="button" id="button-addon2">Search</button>
+    <form action="." method="GET">
+      <div class="input-group input-group-lg mb-5 mx-auto">
+        <input type="text" class="form-control" name="search" value="<?= isset($_GET['search']) ? $_GET['search'] : ""  ?>" placeholder="Masukkan kata kunci">
+        <div class="input-group-append">
+          <button class="btn btn-dark" type="submit" id="button-addon2">Search</button>
+        </div>
       </div>
-    </div>
+    </form>
     <div class="tambah-data">
       <button type="button" data-toggle="modal" data-target="#tambahData" class="btn btn-dark btn-sm mb-2 mx-auto">+ Tambah</button>
     </div>
@@ -39,16 +41,23 @@
         </thead>
         <tbody>
           <?php
-          if (isset($_GET['p'])) {
+          if (isset($_GET['search']) && $_GET['search'] != "") {
+            $searchItem = $_GET['search'];
+            $query = "
+              SELECT namaBarang,namaLokasi,jumlah,namaJenis FROM barang
+              INNER JOIN lokasi
+              ON barang.kodeLokasi = lokasi.kodeLokasi
+              INNER JOIN jenis
+              ON barang.kodeJenis = jenis.kodeJenis
+              WHERE namaBarang LIKE '%{$searchItem}%'
+            ";
+          } else if (isset($_GET['p'])) {
             if (is_numeric($_GET['p']) && $_GET['p'] > 0) {
               $startWith = ($_GET['p'] - 1) * 10;
             } else {
               $startWith = 0;
             }
-          } else {
-            $startWith = 0;
-          }
-          $query = "
+            $query = "
               SELECT namaBarang,namaLokasi,jumlah,namaJenis FROM barang
               INNER JOIN lokasi
               ON barang.kodeLokasi = lokasi.kodeLokasi
@@ -56,6 +65,17 @@
               ON barang.kodeJenis = jenis.kodeJenis
               LIMIT 10 OFFSET $startWith
               ";
+          } else {
+            $startWith = 0;
+            $query = "
+              SELECT namaBarang,namaLokasi,jumlah,namaJenis FROM barang
+              INNER JOIN lokasi
+              ON barang.kodeLokasi = lokasi.kodeLokasi
+              INNER JOIN jenis
+              ON barang.kodeJenis = jenis.kodeJenis
+              LIMIT 10 OFFSET $startWith
+              ";
+          }
           $result = mysqli_query($db, $query);
           $startWith++;
           while ($data = mysqli_fetch_array($result)) {
@@ -81,12 +101,14 @@
       <nav>
         <ul class="pagination justify-content-center">
           <?php
-          $query = "SELECT COUNT(*) as total FROM barang";
-          $result = mysqli_query($db, $query);
-          $resulArr = mysqli_fetch_assoc($result);
-          $totalPage = ceil($resulArr['total'] / 10);
-          for ($i = 1; $i <= $totalPage; $i++) {
-            echo "<li class='page-item'><a class='page-link' href='?p={$i}'>{$i}</a></li>";
+          if (!isset($_GET['search']) || $_GET['search'] === "") {
+            $query = "SELECT COUNT(*) as total FROM barang";
+            $result = mysqli_query($db, $query);
+            $resulArr = mysqli_fetch_assoc($result);
+            $totalPage = ceil($resulArr['total'] / 10);
+            for ($i = 1; $i <= $totalPage; $i++) {
+              echo "<li class='page-item'><a class='page-link' href='?p={$i}'>{$i}</a></li>";
+            }
           }
           ?>
         </ul>
