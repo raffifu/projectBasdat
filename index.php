@@ -34,39 +34,61 @@
             <th scope="col">Lokasi</th>
             <th scope="col">Jenis</th>
             <th scope="col">Jumlah</th>
+            <th scope="col">Action</th>
           </tr>
         </thead>
         <tbody>
           <?php
+          if (isset($_GET['p'])) {
+            if (is_numeric($_GET['p']) && $_GET['p'] > 0) {
+              $startWith = ($_GET['p'] - 1) * 10;
+            } else {
+              $startWith = 0;
+            }
+          } else {
+            $startWith = 0;
+          }
           $query = "
               SELECT namaBarang,namaLokasi,jumlah,namaJenis FROM barang
               INNER JOIN lokasi
               ON barang.kodeLokasi = lokasi.kodeLokasi
               INNER JOIN jenis
               ON barang.kodeJenis = jenis.kodeJenis
+              LIMIT 10 OFFSET $startWith
               ";
           $result = mysqli_query($db, $query);
-          $i = 1;
+          $startWith++;
           while ($data = mysqli_fetch_array($result)) {
             echo "
                   <tr>
-                    <th scope='row'>{$i}</th>
+                    <th scope='row'>{$startWith}</th>
                     <td>{$data['namaBarang']}</td>
                     <td>{$data['namaLokasi']}</td>
                     <td>{$data['namaJenis']}</td>
                     <td>{$data['jumlah']}</td>
+                    <td>
+                      <a href=''>Edit</a>
+                      <a href=''>Delete</a>
+                    </td>
                   </tr>
                 ";
-            $i++;
+            $startWith++;
           }
           ?>
         </tbody>
+
       </table>
       <nav>
         <ul class="pagination justify-content-center">
-          <li class="page-item"><a class="page-link bg-dark text-white" href="?page=1">1</a></li>
-          <li class="page-item"><a class="page-link bg-dark text-white" href="?page=2">2</a></li>
-          <li class="page-item"><a class="page-link bg-dark text-white" href="?page=3">3</a></li>
+          <?php
+          $query = "SELECT COUNT(*) as total FROM barang";
+          $result = mysqli_query($db, $query);
+          $resulArr = mysqli_fetch_assoc($result);
+          $totalPage = ceil($resulArr['total'] / 10);
+          for ($i = 1; $i <= $totalPage; $i++) {
+            echo "<li class='page-item'><a class='page-link' href='?p={$i}'>{$i}</a></li>";
+          }
+          ?>
         </ul>
       </nav>
     </div>
@@ -137,6 +159,18 @@
   <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js" integrity="sha384-9/reFTGAW83EW2RDu2S0VKaIzap3H66lZH81PoYlFhbGU+6BZp6G7niu735Sk7lN" crossorigin="anonymous"></script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/js/bootstrap.min.js" integrity="sha384-w1Q4orYjBQndcko6MimVbzY0tgp4pWB4lZ7lr30WKz0vr/aWKhXdBNmNb5D92v7s" crossorigin="anonymous"></script>
   <script>
+    $.urlParam = function(name) {
+      var results = new RegExp('[\?&]' + name + '=([^&#]*)').exec(window.location.href);
+      return results == null ? 0 : (results[1] || 0);
+    }
+
+    const page = $.urlParam('p');
+    if (page == 0 || isNaN(parseInt(page))) {
+      $('a[href*="?p=1"]')[0].parentElement.classList.add('active')
+    } else {
+      $(`a[href*="?p=${page}"]`)[0].parentElement.classList.add('active')
+    }
+
     $('#simpan').click(event => {
       const form = $('#tambahBarang');
       const namaBarang = form.find('input[name="nama"]')[0].value;
